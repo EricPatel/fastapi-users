@@ -19,7 +19,10 @@ class DatabaseStrategy(
         self.lifetime_seconds = lifetime_seconds
 
     async def read_token(
-        self, token: Optional[str], user_manager: BaseUserManager[models.UP, models.ID]
+        self,
+        token: Optional[str],
+        user_manager: BaseUserManager[models.UP, models.ID],
+        id_only: bool,
     ) -> Optional[models.UP]:
         if token is None:
             return None
@@ -35,6 +38,9 @@ class DatabaseStrategy(
             return None
 
         try:
+            if id_only:
+                return access_token.user_id
+
             parsed_id = user_manager.parse_id(access_token.user_id)
             return await user_manager.get(parsed_id)
         except (exceptions.UserNotExists, exceptions.InvalidID):

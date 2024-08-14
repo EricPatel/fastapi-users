@@ -79,7 +79,9 @@ class TestReadToken:
         database_strategy: DatabaseStrategy[UserModel, IDType, AccessTokenModel],
         user_manager,
     ):
-        authenticated_user = await database_strategy.read_token(None, user_manager)
+        authenticated_user = await database_strategy.read_token(
+            None, user_manager, False
+        )
         assert authenticated_user is None
 
     @pytest.mark.asyncio
@@ -88,7 +90,9 @@ class TestReadToken:
         database_strategy: DatabaseStrategy[UserModel, IDType, AccessTokenModel],
         user_manager,
     ):
-        authenticated_user = await database_strategy.read_token("TOKEN", user_manager)
+        authenticated_user = await database_strategy.read_token(
+            "TOKEN", user_manager, False
+        )
         assert authenticated_user is None
 
     @pytest.mark.asyncio
@@ -104,7 +108,9 @@ class TestReadToken:
                 "user_id": uuid.UUID("d35d213e-f3d8-4f08-954a-7e0d1bea286f"),
             }
         )
-        authenticated_user = await database_strategy.read_token("TOKEN", user_manager)
+        authenticated_user = await database_strategy.read_token(
+            "TOKEN", user_manager, False
+        )
         assert authenticated_user is None
 
     @pytest.mark.asyncio
@@ -116,9 +122,26 @@ class TestReadToken:
         user: UserModel,
     ):
         await access_token_database.create({"token": "TOKEN", "user_id": user.id})
-        authenticated_user = await database_strategy.read_token("TOKEN", user_manager)
+        authenticated_user = await database_strategy.read_token(
+            "TOKEN", user_manager, False
+        )
         assert authenticated_user is not None
         assert authenticated_user.id == user.id
+
+    @pytest.mark.asyncio
+    async def test_valid_token_id_only(
+        self,
+        database_strategy: DatabaseStrategy[UserModel, IDType, AccessTokenModel],
+        access_token_database: AccessTokenDatabaseMock,
+        user_manager,
+        user: UserModel,
+    ):
+        await access_token_database.create({"token": "TOKEN", "user_id": user.id})
+        authenticated_user = await database_strategy.read_token(
+            "TOKEN", user_manager, True
+        )
+        assert authenticated_user is not None
+        assert authenticated_user == user.id
 
 
 @pytest.mark.authentication

@@ -31,7 +31,9 @@ class DuplicateBackendNamesError(Exception):
     pass
 
 
-EnabledBackendsDependency = DependencyCallable[Sequence[AuthenticationBackend[models.UP, models.ID]]]
+EnabledBackendsDependency = DependencyCallable[
+    Sequence[AuthenticationBackend[models.UP, models.ID]]
+]
 
 
 class Authenticator(Generic[models.UP, models.ID]):
@@ -62,7 +64,10 @@ class Authenticator(Generic[models.UP, models.ID]):
         active: bool = False,
         verified: bool = False,
         superuser: bool = False,
-        get_enabled_backends: Optional[EnabledBackendsDependency[models.UP, models.ID]] = None,
+        id_only: bool = False,
+        get_enabled_backends: Optional[
+            EnabledBackendsDependency[models.UP, models.ID]
+        ] = None,
     ):
         """
         Return a dependency callable to retrieve currently authenticated user and token.
@@ -95,6 +100,7 @@ class Authenticator(Generic[models.UP, models.ID]):
                 active=active,
                 verified=verified,
                 superuser=superuser,
+                id_only=id_only,
                 **kwargs,
             )
 
@@ -106,7 +112,10 @@ class Authenticator(Generic[models.UP, models.ID]):
         active: bool = False,
         verified: bool = False,
         superuser: bool = False,
-        get_enabled_backends: Optional[EnabledBackendsDependency[models.UP, models.ID]] = None,
+        id_only: bool = False,
+        get_enabled_backends: Optional[
+            EnabledBackendsDependency[models.UP, models.ID]
+        ] = None,
     ):
         """
         Return a dependency callable to retrieve currently authenticated user.
@@ -139,6 +148,7 @@ class Authenticator(Generic[models.UP, models.ID]):
                 active=active,
                 verified=verified,
                 superuser=superuser,
+                id_only=id_only,
                 **kwargs,
             )
             return user
@@ -153,12 +163,13 @@ class Authenticator(Generic[models.UP, models.ID]):
         active: bool = False,
         verified: bool = False,
         superuser: bool = False,
+        id_only: bool = False,
         **kwargs,
     ) -> Tuple[Optional[models.UP], Optional[str]]:
         user: Optional[models.UP] = None
         token: Optional[str] = None
-        enabled_backends: Sequence[AuthenticationBackend[models.UP, models.ID]] = kwargs.get(
-            "enabled_backends", self.backends
+        enabled_backends: Sequence[AuthenticationBackend[models.UP, models.ID]] = (
+            kwargs.get("enabled_backends", self.backends)
         )
         for backend in self.backends:
             if backend in enabled_backends:
@@ -167,7 +178,7 @@ class Authenticator(Generic[models.UP, models.ID]):
                     name_to_strategy_variable_name(backend.name)
                 ]
                 if token is not None:
-                    user = await strategy.read_token(token, user_manager)
+                    user = await strategy.read_token(token, user_manager, id_only)
                     if user:
                         break
 

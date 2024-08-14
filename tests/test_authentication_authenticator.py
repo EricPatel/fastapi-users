@@ -30,7 +30,10 @@ class MockTransport(Transport):
 
 class NoneStrategy(Strategy):
     async def read_token(
-        self, token: Optional[str], user_manager: BaseUserManager[models.UP, models.ID]
+        self,
+        token: Optional[str],
+        user_manager: BaseUserManager[models.UP, models.ID],
+        id_only: bool,
     ) -> Optional[models.UP]:
         return None
 
@@ -40,7 +43,10 @@ class UserStrategy(Strategy, Generic[models.UP]):
         self.user = user
 
     async def read_token(
-        self, token: Optional[str], user_manager: BaseUserManager[models.UP, models.ID]
+        self,
+        token: Optional[str],
+        user_manager: BaseUserManager[models.UP, models.ID],
+        id_only: bool,
     ) -> Optional[models.UP]:
         return self.user
 

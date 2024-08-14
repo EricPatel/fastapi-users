@@ -94,28 +94,30 @@ class TestReadToken:
     async def test_missing_token(
         self, jwt_strategy: JWTStrategy[UserModel, IDType], user_manager
     ):
-        authenticated_user = await jwt_strategy.read_token(None, user_manager)
+        authenticated_user = await jwt_strategy.read_token(None, user_manager, False)
         assert authenticated_user is None
 
     @pytest.mark.asyncio
     async def test_invalid_token(
         self, jwt_strategy: JWTStrategy[UserModel, IDType], user_manager
     ):
-        authenticated_user = await jwt_strategy.read_token("foo", user_manager)
+        authenticated_user = await jwt_strategy.read_token("foo", user_manager, False)
         assert authenticated_user is None
 
     @pytest.mark.asyncio
     async def test_valid_token_missing_user_payload(
         self, jwt_strategy: JWTStrategy[UserModel, IDType], user_manager, token
     ):
-        authenticated_user = await jwt_strategy.read_token(token(), user_manager)
+        authenticated_user = await jwt_strategy.read_token(token(), user_manager, False)
         assert authenticated_user is None
 
     @pytest.mark.asyncio
     async def test_valid_token_invalid_uuid(
         self, jwt_strategy: JWTStrategy[UserModel, IDType], user_manager, token
     ):
-        authenticated_user = await jwt_strategy.read_token(token("foo"), user_manager)
+        authenticated_user = await jwt_strategy.read_token(
+            token("foo"), user_manager, False
+        )
         assert authenticated_user is None
 
     @pytest.mark.asyncio
@@ -123,7 +125,7 @@ class TestReadToken:
         self, jwt_strategy: JWTStrategy[UserModel, IDType], user_manager, token
     ):
         authenticated_user = await jwt_strategy.read_token(
-            token("d35d213e-f3d8-4f08-954a-7e0d1bea286f"), user_manager
+            token("d35d213e-f3d8-4f08-954a-7e0d1bea286f"), user_manager, False
         )
         assert authenticated_user is None
 
@@ -131,9 +133,21 @@ class TestReadToken:
     async def test_valid_token(
         self, jwt_strategy: JWTStrategy[UserModel, IDType], user_manager, token, user
     ):
-        authenticated_user = await jwt_strategy.read_token(token(user.id), user_manager)
+        authenticated_user = await jwt_strategy.read_token(
+            token(user.id), user_manager, False
+        )
         assert authenticated_user is not None
         assert authenticated_user.id == user.id
+
+    @pytest.mark.asyncio
+    async def test_valid_token_id_only(
+        self, jwt_strategy: JWTStrategy[UserModel, IDType], user_manager, token, user
+    ):
+        authenticated_user = await jwt_strategy.read_token(
+            token(user.id), user_manager, True
+        )
+        assert authenticated_user is not None
+        assert authenticated_user == str(user.id)
 
 
 @pytest.mark.parametrize("jwt_strategy", ["HS256", "RS256", "ES256"], indirect=True)

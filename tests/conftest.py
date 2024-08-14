@@ -520,7 +520,10 @@ class MockTransport(BearerTransport):
 
 class MockStrategy(Strategy[UserModel, IDType]):
     async def read_token(
-        self, token: Optional[str], user_manager: BaseUserManager[UserModel, IDType]
+        self,
+        token: Optional[str],
+        user_manager: BaseUserManager[UserModel, IDType],
+        id_only: bool,
     ) -> Optional[UserModel]:
         if token is not None:
             try:

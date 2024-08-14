@@ -52,14 +52,16 @@ class TestReadToken:
     async def test_missing_token(
         self, redis_strategy: RedisStrategy[UserModel, IDType], user_manager
     ):
-        authenticated_user = await redis_strategy.read_token(None, user_manager)
+        authenticated_user = await redis_strategy.read_token(None, user_manager, False)
         assert authenticated_user is None
 
     @pytest.mark.asyncio
     async def test_invalid_token(
         self, redis_strategy: RedisStrategy[UserModel, IDType], user_manager
     ):
-        authenticated_user = await redis_strategy.read_token("TOKEN", user_manager)
+        authenticated_user = await redis_strategy.read_token(
+            "TOKEN", user_manager, False
+        )
         assert authenticated_user is None
 
     @pytest.mark.asyncio
@@ -70,7 +72,9 @@ class TestReadToken:
         user_manager,
     ):
         await redis.set(f"{redis_strategy.key_prefix}TOKEN", "bar")
-        authenticated_user = await redis_strategy.read_token("TOKEN", user_manager)
+        authenticated_user = await redis_strategy.read_token(
+            "TOKEN", user_manager, False
+        )
         assert authenticated_user is None
 
     @pytest.mark.asyncio
@@ -83,7 +87,9 @@ class TestReadToken:
         await redis.set(
             f"{redis_strategy.key_prefix}TOKEN", "d35d213e-f3d8-4f08-954a-7e0d1bea286f"
         )
-        authenticated_user = await redis_strategy.read_token("TOKEN", user_manager)
+        authenticated_user = await redis_strategy.read_token(
+            "TOKEN", user_manager, False
+        )
         assert authenticated_user is None
 
     @pytest.mark.asyncio
@@ -95,9 +101,26 @@ class TestReadToken:
         user,
     ):
         await redis.set(f"{redis_strategy.key_prefix}TOKEN", str(user.id))
-        authenticated_user = await redis_strategy.read_token("TOKEN", user_manager)
+        authenticated_user = await redis_strategy.read_token(
+            "TOKEN", user_manager, False
+        )
         assert authenticated_user is not None
         assert authenticated_user.id == user.id
+
+    @pytest.mark.asyncio
+    async def test_valid_token(
+        self,
+        redis_strategy: RedisStrategy[UserModel, IDType],
+        redis: RedisMock,
+        user_manager,
+        user,
+    ):
+        await redis.set(f"{redis_strategy.key_prefix}TOKEN", str(user.id))
+        authenticated_user = await redis_strategy.read_token(
+            "TOKEN", user_manager, True
+        )
+        assert authenticated_user is not None
+        assert authenticated_user == str(user.id)
 
 
 @pytest.mark.authentication

@@ -21,7 +21,10 @@ class RedisStrategy(Strategy[models.UP, models.ID], Generic[models.UP, models.ID
         self.key_prefix = key_prefix
 
     async def read_token(
-        self, token: Optional[str], user_manager: BaseUserManager[models.UP, models.ID]
+        self,
+        token: Optional[str],
+        user_manager: BaseUserManager[models.UP, models.ID],
+        id_only: bool,
     ) -> Optional[models.UP]:
         if token is None:
             return None
@@ -31,6 +34,9 @@ class RedisStrategy(Strategy[models.UP, models.ID], Generic[models.UP, models.ID
             return None
 
         try:
+            if id_only:
+                return user_id
+
             parsed_id = user_manager.parse_id(user_id)
             return await user_manager.get(parsed_id)
         except (exceptions.UserNotExists, exceptions.InvalidID):
